@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+build/
+.next/
+*.tsbuildinfo
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Docker volumes (auto-generated data)
+all-in-one.amd64.0.12.4/univer-server-0.12.4/logs/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

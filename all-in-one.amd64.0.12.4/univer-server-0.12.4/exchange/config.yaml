@@ -1,0 +1,21 @@
+temporal:
+  enable: true
+  addr: no-txt:///univer-temporal:7233
+  namespace: default
+  PrometheusListenAddress: 0.0.0.0:9090
+  export_concurrent: 1
+  import_concurrent: 1
+  task_timeout: 600s
+
+client:
+  universer:
+    addr: universer:9000
+    timeout: 20s
+
+redis:
+  addr: "univer-redis:6379"
+  db: 0
+  username: ""
+  password: ""
+  read_timeout: 1s
+  write_timeout: 1s

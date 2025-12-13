@@ -1,0 +1,98 @@
+server:
+  http:
+    addr: 0.0.0.0:8000
+    timeout: 10s
+    corsAllowOrigins: ${CORS_ALLOW_ORIGINS}
+  grpc:
+    addr: 0.0.0.0:9000
+    timeout: 10s
+
+data:
+  database:
+    maxOpenConns: 100
+    maxIdleConns: 100
+    connMaxLifetime: 60
+    driver: ${DATABASE_DRIVER}
+    database: ${DATABASE_DBNAME}
+    dsn: ${DATABASE_DSN}
+    replicaDSN: ${DATABASE_REPLICA_DSN}
+  rabbitmq:
+    enabled: true
+    addr: amqp://${RABBITMQ_USERNAME}:${RABBITMQ_PASSWORD}@${RABBITMQ_HOST}:${RABBITMQ_PORT}/
+    eventSync: ${EVENT_SYNC}
+    cluster:
+      enabled: ${RABBITMQ_CLUSTER_ENABLED}
+      username: "${RABBITMQ_CLUSTER_USERNAME}"
+      password: "${RABBITMQ_CLUSTER_PASSWORD}"
+      addr: "${RABBITMQ_CLUSTER_ADDR}"
+      vhost: "${RABBITMQ_CLUSTER_VHOST}"
+      schema: "${RABBITMQ_CLUSTER_SCHEMA}"
+  temporal:
+    addr: ${TEMPORAL_HOST}:${TEMPORAL_PORT}
+    namespace: ${TEMPORAL_NAMESPACE}
+  redis:
+    poolSize: 100
+    addr: "${REDIS_ADDR}"
+    db: ${REDIS_DB}
+    username: "${REDIS_USERNAME}"
+    password: "${REDIS_PASSWORD}"
+    read_timeout: 1s
+    write_timeout: 1s
+  s3:
+    accessKeyID: "${S3_USER}"
+    accessKeySecret: "${S3_PASSWORD}"
+    region: "${S3_REGION}"
+    endpoint: "${S3_ENDPOINT}"
+    endpointPublic: "${S3_ENDPOINT_PUBLIC}"
+    usePathStyle: ${S3_PATH_STYLE}
+    presignExpires: 3600s
+    defaultBucket: "${S3_DEFAULT_BUCKET}"
+service:
+  apply:
+    addr: collaboration-envoy:10000
+    timeout: 10s
+  ssc:
+    addr: "ssc-server:5005"
+    timeout: 10s
+admin: []
+extra:
+  celldataMaxSize: 10485760 # 10M bytes
+auth:
+  enabled: ${AUTH_ENABLED}
+  univerEnabled: ${UNIVER_ENABLED}
+  cookieDomain: ${AUTH_COOKIE_DOMAIN}
+  oidc:
+    enabled: ${AUTH_OIDC_ENABLED}
+    issuer: ${AUTH_OIDC_ISSUER}
+    clientID: ${AUTH_OIDC_CLIENT_ID}
+    clientSecret: ${AUTH_OIDC_CLIENT_SECRET}
+    redirectURL: ${AUTH_OIDC_CALLBACK_URL}
+    cookieDomain: ${AUTH_COOKIE_DOMAIN}
+  permission:
+    enabled: ${AUTH_PERMISSION_ENABLED}
+    defaultShareScope: "${AUTH_PERMISSION_DEFAULT_SHARE_SCOPE}"
+    defaultShareRole: "${AUTH_PERMISSION_DEFAULT_SHARE_ROLE}"
+    enableObjInherit: ${AUTH_PERMISSION_ENABLE_OBJ_INHERIT}
+    customerStrategies: ${AUTH_PERMISSION_CUSTOMER_STRATEGIES}
+apiLimit: {}
+sentryConfig: {}
+dataProtectionConf:
+  enableProtection: false
+  dataKeyRotate: 5s
+  dataKeyCacheExpiration: 30s
+sesConfig: {}
+usip:
+  enabled: ${USIP_ENABLED}
+  uri:
+    credential: ${USIP_URI_CREDENTIAL}
+    userinfo: ${USIP_URI_USERINFO}
+    role: ${USIP_URI_ROLE}
+    collaborators: ${USIP_URI_COLLABORATORS}
+    unitEditTime: ${USIP_URI_UNITEDITTIME}
+postHogConf:
+  enabled: false
+entitlementConf:
+  enable: false
+statsConf: {}
+permissionBasedExport:
+  enabled: ${PERMISSION_BASED_EXPORT_ENABLED}

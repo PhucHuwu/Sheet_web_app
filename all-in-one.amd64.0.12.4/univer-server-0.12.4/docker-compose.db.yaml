@@ -1,0 +1,187 @@
+services:
+  lb:
+    restart: always
+    container_name: univer-lb
+    image: nginx:alpine-slim
+    ports:
+     - ${HOST_NGINX_PORT}:8000
+    networks:
+      - univer
+    depends_on:
+      - universer
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d/
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+
+  universer:
+    restart: always
+    image: univer-acr-registry.cn-shenzhen.cr.aliyuncs.com/${EDITION}/universer:${UNIVERSER_VERSION}
+    expose:
+      - 8000
+      - 9000
+    environment:
+      - NO_PROXY=127.0.0.1,localhost,${DOCKER_NETWORK_SUBNET},univer-temporal,collaboration-envoy,univer-minio,univer-demo-usip
+      - SERVICE_NAME=Universer
+      - SERVICE_VERSION=${UNIVERSER_VERSION}
+    volumes:
+      - ./configs:/data/configs
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/univers:/tmp/univers
+      - ./logs/universer:/app/logs
+    depends_on:
+      univer-temporal:
+        condition: service_started
+    networks:
+      - univer
+    labels:
+      - com.univer.app=universer
+    deploy:
+      replicas: ${UNIVERSER_REPLICATION_CNT}
+      endpoint_mode: dnsrr
+
+  collaboration-envoy:
+    restart: always
+    image: envoyproxy/envoy:v1.31.3
+    volumes:
+      - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml
+    expose:
+      - 10000
+    networks:
+      - univer
+    depends_on:
+      - collaboration-server
+    environment:
+      - no_proxy=127.0.0.1,localhost,${DOCKER_NETWORK_SUBNET},collaboration-server
+
+  collaboration-server:
+    restart: always
+    image: univer-acr-registry.cn-shenzhen.cr.aliyuncs.com/release/univer-collaboration:${COLLABORATION_SERVER_VERSION}
+    environment:
+      - URL_OF_APPLY_SERVICE=0.0.0.0:5002
+      - URL_OF_UNIVERSER_SERVICE=universer:8000
+      - URL_OF_SNAPSHOT_SERVICE=universer:9000
+      - SAVE_SHEET_SNAPSHOT_INTERVAL=50
+      - SAVE_DOC_SNAPSHOT_INTERVAL=50
+      - ENABLE_MUTATION_APPLY_INTERCEPTOR=true
+      - no_proxy=127.0.0.1,localhost,${DOCKER_NETWORK_SUBNET},universer
+      - NODE_OPTIONS=--max-old-space-size=${COLLABORATION_SERVER_MEMORY_LIMIT}
+      - LRU_CACHE_CAPACITY=10000
+    expose:
+      - 5002
+      - 9090
+    networks:
+      - univer
+    labels:
+      - com.univer.app=collaboration-server
+    deploy:
+      replicas: ${COLLABORATION_SERVER_REPLICATION_CNT}
+      endpoint_mode: dnsrr
+      resources:
+        limits:
+          memory: ${COLLABORATION_SERVER_MEMORY_LIMIT}M
+
+  univer-postgres-temporal:
+    image: postgres:${POSTGRES_VERSION}
+    restart: always
+    container_name: univer-postgres-temporal
+    environment:
+      - POSTGRES_USER=temporal
+      - POSTGRES_PASSWORD=temporal
+      - PGDATA=/var/lib/postgresql/data/
+    expose:
+      - 5432
+    volumes:
+      - postgres-data-temporal:/var/lib/postgresql/data
+    networks:
+      - univer
+    labels:
+      - com.univer.app=postgres-temporal
+
+  univer-temporal:
+    restart: always
+    container_name: univer-temporal
+    image: temporalio/auto-setup:${TEMPORAL_VERSION}
+    environment:
+      - DB=postgresql
+      - POSTGRES_SEEDS=univer-postgres-temporal
+      - DB_PORT=5432
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+      - POSTGRES_USER=temporal
+      - POSTGRES_PWD=temporal
+      - TEMPORAL_CLI_SHOW_STACKS=1
+      - NO_PROXY=127.0.0.1,localhost,${DOCKER_NETWORK_SUBNET}
+    volumes:
+      - ./temporal/dynamicconfig:/etc/temporal/config/dynamicconfig
+    expose:
+      - 7233
+    depends_on:
+      univer-postgres-temporal:
+        condition: service_started
+    networks:
+      - univer
+    labels:
+      - com.univer.app=temporal
+
+  univer-worker-exchange:
+    restart: always
+    image: univer-acr-registry.cn-shenzhen.cr.aliyuncs.com/release/worker-exchange:${UNIVER_WORKER_EXCHANGE_VERSION}
+    command: ["/app/worker", "-conf", "/data/configs/config.yaml"]
+    environment:
+      - NO_PROXY=127.0.0.1,localhost,${DOCKER_NETWORK_SUBNET},univer-temporal,univer-minio,universer
+      - TEMPORAL_SERVER=${TEMPORAL_HOST}:${TEMPORAL_PORT}
+      - TEMPORAL_NAMESPACE=${TEMPORAL_NAMESPACE}
+      - SERVICE_NAME=exchange-worker
+      - SERVICE_VERSION=${UNIVER_WORKER_EXCHANGE_VERSION}
+      - IMPORT_CONCURRENT=${EXCHANGE_WORKER_IMPORT_CONCURRENT}
+      - EXPORT_CONCURRENT=${EXCHANGE_WORKER_EXPORT_CONCURRENT}
+    volumes:
+        - ./logs/worker-exchange:/app/logs
+        - ./exchange:/data/configs
+    depends_on:
+      - univer-temporal
+    networks:
+      - univer
+    labels:
+      - com.univer.app=worker-exchange
+    deploy:
+      replicas: ${EXCHANGE_WORKER_REPLICATION_CNT}
+      endpoint_mode: dnsrr
+      resources:
+        limits:
+          memory: ${EXCHANGE_WORKER_MEMORY_LIMIT}M
+
+  univer-demo-ui:
+    image: univer-acr-registry.cn-shenzhen.cr.aliyuncs.com/release/univer-collaboration-lite:${UNIVER_DEMO_UI_VERSION}
+    container_name: univer-collaboration-demo-ui
+    ports:
+      - "3010:3010"
+    volumes:
+      - ./configs:/data/configs
+    networks:
+      - univer
+    restart: "no"
+    profiles:
+      - demo-ui
+
+  univer-demo-usip:
+    image: univer-acr-registry.cn-shenzhen.cr.aliyuncs.com/release/usip-server:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./usip-demo:/app/configs
+    networks:
+      - univer
+    restart: "no"
+    profiles:
+      - demo-usip
+    environment:
+      - NO_PROXY=127.0.0.1,localhost,${DOCKER_NETWORK_SUBNET},lb
+
+networks:
+  univer:
+    external: true
+    name: univer-prod
+
+volumes:
+  postgres-data-temporal:
+    name: univer-prod-postgres-for-temporal-data
