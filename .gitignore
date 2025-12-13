@@ -23,10 +23,10 @@ logs/
 *.log
 npm-debug.log*
 
-# Docker volumes (auto-generated data)
-all-in-one.amd64.0.12.4/univer-server-0.12.4/logs/
+# Univer Server package (auto-downloaded)
+all-in-one.amd64.0.12.4/
 
-# Large files (Docker images)
+# Large files
 *.tar.gz
 *.tar
 

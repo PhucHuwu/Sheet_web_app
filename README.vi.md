@@ -6,8 +6,7 @@
 
 -   Docker Desktop (đang chạy)
 -   Node.js 18+ với pnpm
--   PostgreSQL 16 (đang chạy)
--   Mật khẩu PostgreSQL: `Phuc3724@`
+-   PostgreSQL 16 (đang chạy, mật khẩu: `Phuc3724@`)
 
 ## Hướng Dẫn Nhanh
 
@@ -19,9 +18,12 @@
 
 Script sẽ tự động:
 
--   Cài đặt các dependencies
+-   Tải Univer Server package từ nguồn chính thức
+-   Áp dụng các cấu hình tùy chỉnh
+-   Cài đặt npm dependencies
 -   Tạo database 'univer' trong PostgreSQL
 -   Khởi tạo database schema
+-   Khởi động Docker containers
 
 ### Khởi Động Hệ Thống
 
@@ -52,11 +54,15 @@ Mở trình duyệt: http://localhost:5173
 -   Univer Server: http://localhost:8000 (Docker)
 -   Database: PostgreSQL local (localhost:5432)
 
-## Các File Quan Trọng
+## Cấu Trúc Dự Án
 
-| File                  | Mục đích                  |
-| --------------------- | ------------------------- |
-| `install.ps1`         | Script cài đặt lần đầu    |
-| `start.ps1`           | Script khởi động hệ thống |
-| `stop.ps1`            | Script dừng hệ thống      |
-| `configs/config.yaml` | Cấu hình Univer Server    |
+```
+Sheet_web_app/
+├── install.ps1          # Script cài đặt lần đầu
+├── start.ps1            # Script khởi động
+├── stop.ps1             # Script dừng hệ thống
+├── usip-server/         # Server xác thực
+├── univer-start-kit/    # Ứng dụng Frontend
+├── univer-patches/      # Cấu hình tùy chỉnh
+└── all-in-one.../       # (tự động tải) Univer Server
+```

@@ -6,7 +6,7 @@ A collaborative spreadsheet editor with user authentication and permissions.
 
 -   Docker Desktop (running)
 -   Node.js 18+ with pnpm
--   PostgreSQL 16 (running)
+-   PostgreSQL 16 (running, password: `Phuc3724@`)
 
 ## Quick Start
 
@@ -16,12 +16,14 @@ A collaborative spreadsheet editor with user authentication and permissions.
 .\install.ps1
 ```
 
-This will:
+This will automatically:
 
+-   Download Univer Server package from official source
+-   Apply custom configuration patches
 -   Install npm dependencies
 -   Create database 'univer' in PostgreSQL
 -   Initialize database schema
--   Update configuration with your PostgreSQL password
+-   Start Docker containers
 
 ### Start System
 
@@ -51,3 +53,16 @@ Open browser: http://localhost:5173
 -   USIP Server: http://localhost:3001 (Node.js authentication)
 -   Univer Server: http://localhost:8000 (Docker)
 -   Database: PostgreSQL local (localhost:5432)
+
+## Project Structure
+
+```
+Sheet_web_app/
+├── install.ps1          # First-time setup script
+├── start.ps1            # Start all services
+├── stop.ps1             # Stop all services
+├── usip-server/         # Authentication server
+├── univer-start-kit/    # Frontend application
+├── univer-patches/      # Custom config overrides
+└── all-in-one.../       # (auto-downloaded) Univer Server
+```
