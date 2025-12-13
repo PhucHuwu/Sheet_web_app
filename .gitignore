@@ -26,6 +26,10 @@ npm-debug.log*
 # Docker volumes (auto-generated data)
 all-in-one.amd64.0.12.4/univer-server-0.12.4/logs/
 
+# Large files (Docker images)
+*.tar.gz
+*.tar
+
 # Temporary files
 *.tmp
 *.temp
